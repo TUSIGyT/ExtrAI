@@ -19,24 +19,40 @@ def process_batch(input_file, prompt_file, json_property, model, output_file):
     with open(input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    results = []
+    with open(output_file, "w", encoding="utf-8") as f_out:
 
-    for item in data:
+        for item in data:
 
-        text = item[json_property]
-        news_id = item.get("id")
+            news_id = item.get("id")
+            text = item.get(json_property)
 
-        response = ollama.chat(
-            model=model,
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": text},
-            ],
-        )
-        extracted_data = parse_llm_json(response["message"]["content"])
+            result = {"model": model, "id": news_id}
 
-        results.append({"id": news_id, **extracted_data})
+            try:
 
-    with open(output_file, "w", encoding="utf-8") as f:
+                response = ollama.chat(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": text},
+                    ],
+                )
 
-        json.dump(results, f, ensure_ascii=False, indent=4)
+                extracted_data = parse_llm_json(response["message"]["content"])
+
+                result.update(extracted_data)
+
+            except Exception as e:
+
+                result.update(
+                    {
+                        "error": str(e),
+                        "raw_response": (
+                            response["message"]["content"]
+                            if "response" in locals()
+                            else None
+                        ),
+                    }
+                )
+
+            f_out.write(json.dumps(result, ensure_ascii=False) + "\n")
