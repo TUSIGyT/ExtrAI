@@ -65,14 +65,40 @@ REGLAS POR CAMPO
 
 "Vehiculo"  [solo completar si "Misiones" = "sí"; de lo contrario → null]
   Elegir EXACTAMENTE UNA de las siguientes categorías. Respetar mayúsculas, tildes y espacios:
-
-    Automovil | Automovil y bicicleta | Automovil y motocicleta | Automovil y camioneta| Automovil y camión | Automoviles
-    Camioneta | Camioneta y bicicleta | Camioneta y motocicleta | Camioneta y Camión | Camionetas |
-    Camión | Camión y automovil | Camión y bicicleta | Camión y motocicleta | Camiones
-    Motocicleta | Motocicleta y bicicleta | Motocicletas | Motocicleta y colectivo
-    Colectivo | Colectivo y bicicleta | Colectivo y motocicleta | Colectivo y Camioneta | Colectivo y camión | Colectivos
-    Bicicleta | Bicicletas | Tractor | Tractores | Monopatin | Motoniveladora | Motoniveladoras
-    No indentificable
+    "Automovil",
+    "Automovil y Bicicleta",
+    "Automovil y Motocicleta",
+    "Automovil y Camion",
+    "Automoviles",
+    "Camioneta",
+    "Camioneta y Automovil",
+    "Camionetas y Automoviles",
+    "Camioneta y Motocicleta",
+    "Camionetas",
+    "Camión",
+    "Camión y Automovil",
+    "Camión y Automoviles",
+    "Camión y Motocicleta",
+    "Camión y Camioneta",
+    "Camión y Motocicleta",
+    "Camión y Camioneta",
+    "Camión, Camioneta y Automovil",
+    "Camiones y Automovil",
+    "Camiones y Camioneta",
+    "Camiones",
+    "Motocicleta",
+    "Motocicleta y Bicicleta",
+    "Motocicletas",
+    "Colectivo",
+    "Colectivo y Motocicleta",
+    "Colectivo y automovil",
+    "Colectivos",
+    "Bicicleta",
+    "Tractor",
+    "Tractores",
+    "Monopatín",
+    "Motoniveladora y motocicleta",
+    "No indentificable"
 
   Criterio de selección:
   - Un solo tipo de vehículo → usar la forma singular si había uno, plural si dos o más del mismo.
