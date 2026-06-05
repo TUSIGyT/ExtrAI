@@ -158,8 +158,8 @@ Ejecutar:
 
 ```bash
 poetry run python src/extrai/data_preparation.py \
-    --input news/news/sample_primera_edicion_siniestros_viales_2024.json \
-    --output news/news/sample_w_content.json
+    --input news/sample/sample_primera_edicion_siniestros_viales_2024.json \
+    --output news/sample/sample_w_content.json
 ```
 
 ---
@@ -178,7 +178,7 @@ Ejemplo:
 
 ```bash
 poetry run extrai-batch \
-    --input news/sample.json \
+    --input news/sample/sample_w_content.json \
     --prompt src/extrai/prompts/prompt_v3.txt \
     --property content \
     --model qwen3:8b \

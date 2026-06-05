@@ -15,6 +15,7 @@ def process_batch(input_file, prompt_file, json_property, model, output_file):
     for item in data:
 
         text = item[json_property]
+        news_id = item.get("id")
 
         response = ollama.chat(
             model=model,
@@ -24,7 +25,7 @@ def process_batch(input_file, prompt_file, json_property, model, output_file):
             ],
         )
 
-        results.append({**item, "response": response["message"]["content"]})
+        results.append({"id": news_id, "response": response["message"]["content"]})
 
     with open(output_file, "w", encoding="utf-8") as f:
 
