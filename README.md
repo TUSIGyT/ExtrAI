@@ -1,58 +1,240 @@
-# ExtrAI - EXTRacción Automática de Información por LLM
+# ExtrAI - Extracción Automática de Información con LLM
 
-Proyecto desarrollado para la extracción automatica de informaciones al respecto de los siniestros viales ocurridos en Misiones, raspados de la la página del diário Primera Edición, usando framework [`ollama`](https://ollama.com/) de Inteligencia Artifical (LLM).
+ExtrAI es un proyecto desarrollado para la extracción automática de información sobre siniestros viales ocurridos en la provincia de Misiones (Argentina), utilizando noticias recopiladas del diario Primera Edición.
 
-# Atención
+El sistema utiliza modelos de Lenguaje Natural (LLM) ejecutados localmente mediante [Ollama](https://ollama.com/), permitiendo transformar textos periodísticos no estructurados en datos estructurados en formato JSON.
 
-Es importante tener el [ollama instalado](https://ollama.com/download) con los [modelos LLM](https://ollama.com/search) descargados y configurados.
+---
 
-# Organziando ambiente de trabajo:
+# Requisitos
 
-Haciendo el clone del proyecto:
-`git clone git@github.com:TUSIGyT/ExtrAI.git`
+Antes de ejecutar el proyecto es necesario instalar:
 
-Accediendo a la carpeta:
-`cd ExtrAI`
+- [Ollama](https://ollama.com/download)
+- Modelos LLM compatibles descargados desde [Ollama Models](https://ollama.com/search)
 
-## Con [`venv`](https://docs.python.org/3/library/venv.html)
-Creando ambiente virtual
+Ejemplo:
 
-`python -m venv .venv`
+```bash
+ollama pull qwen3:8b
+````
 
-Activando el ambiente virtual creado
+Verificar instalación:
 
-`source .venv/bin/activate`
+```bash
+ollama --version
+```
 
-En su primer uso, conviene actualizar el `pip`:
-`pip install --upgrade pip`
+---
 
-Instalando dependencias:
-`pip install -r requirements.txt`
+# Instalación
 
-## Con [`poetry`](https://python-poetry.org/)
+Clonar el repositorio:
 
-`poetry install`
-Despues de activar el ambiente virtual, basta correr el modelo.
+```bash
+git clone git@github.com:TUSIGyT/ExtrAI.git
+```
 
-# Entendiendo el proyecto
+Acceder al proyecto:
 
-El ExtrAI está basado en [ollama-batch](https://github.com/emi420/ollama-batch) para correr modelos de LLM con el mismo prompt para distintas notícias almacenadas en JSON.
-Para eso, es importante disponer de los siguientes elementos:
-- [`Noticias`](./news/sample_primera_edicion_siniestros_viales_2024.json) - Conjunto de noticias organizadas en una lista de json;
-- [`Prompt`](./src/extrai/prompts/prompt_v3.txt) - Archivo .txt con la consigna al modelo LLM;
+```bash
+cd ExtrAI
+```
 
-Resultado
-- [`Results`](./results/deepseek-r1:8b_result.json) - Resultado de la extracción de información por LLM;
+---
 
-Es probable que haya que desarrollar un paso posterior para limpieza del resultado, como suele pasar con `deepseek`.
-Por eso se ha creado el [`data-cleaning`](./src/extrai/post-processing/data_cleaning.py).
+## Opción 1 - Instalación con venv
 
-# Corriendo el modelo
+Crear ambiente virtual:
 
-`poetry run ollama-batch -f /news/sample_primera_edicion_siniestros_viales_2024.json --json-append id --prompt-file src/extrai/prompts/prompt_v3.txt --json-property=cuerpo -m deepseek-r1:8b > /results/deepseek-r1:8b_result.json`
+```bash
+python -m venv .venv
+```
+
+Activar ambiente:
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+Actualizar pip:
+
+```bash
+pip install --upgrade pip
+```
+
+Instalar dependencias:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Opción 2 - Instalación con Poetry (recomendado)
+
+Instalar dependencias:
+
+```bash
+poetry install
+```
+
+Las herramientas del proyecto pueden ejecutarse utilizando:
+
+```bash
+poetry run <comando>
+```
+
+---
+
+# Estructura del proyecto
 
 ```
-for model in deepseek-r1:8b gemma3:4b llama3.2 test_wqp_deepseek:latest; do
-    poetry run ollama-batch -f /news/sample_primera_edicion_siniestros_viales_2024.json --prompt-file src/extrai/prompts/prompt_v3.txt --json-property=cuerpo -m $model > /results/"$model"_result.json;
-    done
+ExtrAI/
+│
+├── news/
+│   └── archivos JSON con noticias
+│
+├── src/
+│   └── extrai/
+│       ├── prompts/
+│       │   └── prompts utilizados por los modelos
+│       │
+│       ├── post-processing/
+│       │   └── limpieza y normalización de resultados
+│       │
+│       ├── batch.py
+│       ├── cli.py
+│       └── data_preparation.py
+│
+└── results/
+    └── resultados de extracción
 ```
+
+---
+
+# Flujo de trabajo
+
+El proceso de extracción está compuesto por tres etapas:
+
+1. Preparación de los datos
+2. Extracción mediante LLM
+3. Post-procesamiento de resultados
+
+---
+
+# 1. Preparación de datos
+
+Los modelos LLM reciben como entrada un texto consolidado dentro de una propiedad JSON.
+
+La herramienta `data_preparation` crea una nueva propiedad llamada `content`, concatenando las informaciones disponibles en cada noticia.
+
+Ejemplo:
+
+Entrada:
+
+```json
+{
+    "title": "Accidente vial",
+    "date": "2024-01-01",
+    "location": "Posadas"
+}
+```
+
+Salida:
+
+```json
+{
+    "title": "Accidente vial",
+    "date": "2024-01-01",
+    "location": "Posadas",
+    "content": "title: Accidente vial; date: 2024-01-01; location: Posadas"
+}
+```
+
+Ejecutar:
+
+```bash
+poetry run python src/extrai/data_preparation.py \
+    --input news/news/sample_primera_edicion_siniestros_viales_2024.json \
+    --output news/news/sample_w_content.json
+```
+
+---
+
+# 2. Extracción con modelos LLM
+
+ExtrAI ejecuta el mismo prompt sobre múltiples noticias utilizando diferentes modelos locales.
+
+Los elementos necesarios son:
+
+* Archivo JSON con noticias.
+* Prompt de extracción.
+* Modelo LLM instalado en Ollama.
+
+Ejemplo:
+
+```bash
+poetry run extrai-batch \
+    --input news/sample.json \
+    --prompt src/extrai/prompts/prompt_v3.txt \
+    --property content \
+    --model qwen3:8b \
+    --output results/qwen3_8b_result.json
+```
+
+---
+
+# Ejecutar múltiples modelos
+
+Ejemplo para comparar diferentes LLM:
+
+```bash
+for model in gemma3:4b Granite4.1:8b qwen3:8b llama3:8b; do
+
+    poetry run extrai-batch \
+        --input news/news/sample_w_content.json \
+        --prompt src/extrai/prompts/prompt_final.txt \
+        --property content \
+        --model $model \
+        --output results/${model}_result.json
+
+done
+```
+
+---
+
+# 3. Post-procesamiento
+
+Algunos modelos pueden devolver información adicional junto al JSON esperado.
+
+Por ese motivo se incluye una etapa de limpieza:
+
+```
+src/extrai/post-processing/data_cleaning.py
+```
+
+Esta etapa permite normalizar las respuestas generadas por los modelos antes de su análisis posterior.
+
+---
+
+# Resultados
+
+Los resultados generados se almacenan en:
+
+```
+results/
+```
+
+Ejemplo:
+
+```
+results/
+├── qwen3:8b_result.json
+├── deepseek-r1:8b_result.json
+└── llama3.2_result.json
+```
+
+Cada archivo contiene las noticias procesadas junto con la información extraída por el modelo LLM.
