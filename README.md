@@ -195,7 +195,7 @@ Ejemplo para comparar diferentes LLM:
 for model in gemma3:4b Granite4.1:8b qwen3:8b llama3:8b; do
 
     poetry run extrai-batch \
-        --input news/news/sample_w_content.json \
+        --input news/sample/sample_w_content.json \
         --prompt src/extrai/prompts/prompt_final.txt \
         --property content \
         --model $model \
