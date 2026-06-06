@@ -1,64 +1,123 @@
 import json
 import re
-from pathlib import Path
+import time
 
 import ollama
 
 
 def parse_llm_json(content):
     """
-    Limpia bloques markdown y convierte la respuesta del LLM
-    en un diccionario Python.
+    Extrae JSON de respuestas LLM.
+    Acepta bloques markdown: json, python, etc.
     """
 
-    content = re.sub(r"```(?:json)?|```", "", content).strip()
+    content = content.strip()
+
+    # Caso: respuesta dentro de bloque markdown
+    match = re.search(r"```[a-zA-Z0-9_-]*\s*(.*?)```", content, re.DOTALL)
+
+    if match:
+        content = match.group(1).strip()
+
+    # Caso: texto adicional antes/después del JSON
+    # busca el primer objeto JSON
+    match = re.search(r"\{.*\}", content, re.DOTALL)
+
+    if match:
+        content = match.group(0)
+
+    if not content:
+        raise ValueError("LLM returned empty response")
 
     return json.loads(content)
 
 
 def read_jsonl(input_file):
     """
-    Lee un archivo JSONL línea por línea.
-    Cada línea debe ser un objeto JSON independiente.
+    Lee archivos JSONL línea por línea.
     """
 
     with open(input_file, "r", encoding="utf-8") as f:
 
-        for line in f:
+        for line_number, line in enumerate(f, start=1):
 
-            if line.strip():
+            line = line.strip()
+
+            if not line:
+                continue
+
+            try:
+
                 yield json.loads(line)
+
+            except json.JSONDecodeError as e:
+
+                raise ValueError(f"Invalid JSONL at line {line_number}: {e}")
+
+
+def call_ollama(model, prompt, text, retries=3):
+    """
+    Ejecuta Ollama con reintentos.
+    """
+
+    last_error = None
+
+    for attempt in range(retries):
+
+        try:
+
+            response = ollama.chat(
+                model=model,
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": text},
+                ],
+                options={"temperature": 0, "num_ctx": 4096},
+                keep_alive="5m",
+            )
+
+            return response
+
+        except Exception as e:
+
+            last_error = e
+
+            wait = 5 * (attempt + 1)
+
+            print(f"Ollama error ({attempt+1}/{retries}). " f"Retrying in {wait}s...")
+
+            time.sleep(wait)
+
+    raise last_error
 
 
 def process_batch(input_file, prompt_file, json_property, model, output_file):
-
-    input_file = Path(input_file)
-    output_file = Path(output_file)
 
     with open(prompt_file, "r", encoding="utf-8") as f:
 
         prompt = f.read()
 
+    processed = 0
+
     with open(output_file, "w", encoding="utf-8") as f_out:
 
         for item in read_jsonl(input_file):
 
+            processed += 1
+
             news_id = item.get("id")
+
             text = item.get(json_property)
 
             result = {"model": model, "id": news_id}
 
             try:
 
-                response = ollama.chat(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": prompt},
-                        {"role": "user", "content": text},
-                    ],
-                )
+                response = call_ollama(model, prompt, text)
 
-                extracted_data = parse_llm_json(response["message"]["content"])
+                raw_response = response["message"]["content"]
+
+                extracted_data = parse_llm_json(raw_response)
 
                 result.update(extracted_data)
 
@@ -68,11 +127,16 @@ def process_batch(input_file, prompt_file, json_property, model, output_file):
                     {
                         "error": str(e),
                         "raw_response": (
-                            response["message"]["content"]
-                            if "response" in locals()
-                            else None
+                            raw_response if "raw_response" in locals() else None
                         ),
                     }
                 )
 
             f_out.write(json.dumps(result, ensure_ascii=False) + "\n")
+
+            # libera referencia local
+            if processed % 50 == 0:
+
+                print(f"Processed {processed} news...")
+
+    print(f"Finished. Total processed: {processed}")
