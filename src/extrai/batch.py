@@ -13,14 +13,11 @@ def parse_llm_json(content):
 
     content = content.strip()
 
-    # Caso: respuesta dentro de bloque markdown
     match = re.search(r"```[a-zA-Z0-9_-]*\s*(.*?)```", content, re.DOTALL)
 
     if match:
         content = match.group(1).strip()
 
-    # Caso: texto adicional antes/después del JSON
-    # busca el primer objeto JSON
     match = re.search(r"\{.*\}", content, re.DOTALL)
 
     if match:
@@ -32,14 +29,18 @@ def parse_llm_json(content):
     return json.loads(content)
 
 
-def read_jsonl(input_file):
+def read_jsonl(input_file, start_line=1):
     """
-    Lee archivos JSONL línea por línea.
+    Lee archivos JSONL línea por línea
+    comenzando desde start_line.
     """
 
     with open(input_file, "r", encoding="utf-8") as f:
 
         for line_number, line in enumerate(f, start=1):
+
+            if line_number < start_line:
+                continue
 
             line = line.strip()
 
@@ -47,7 +48,6 @@ def read_jsonl(input_file):
                 continue
 
             try:
-
                 yield json.loads(line)
 
             except json.JSONDecodeError as e:
@@ -56,9 +56,6 @@ def read_jsonl(input_file):
 
 
 def call_ollama(model, prompt, text, retries=3):
-    """
-    Ejecuta Ollama con reintentos.
-    """
 
     last_error = None
 
@@ -91,17 +88,27 @@ def call_ollama(model, prompt, text, retries=3):
     raise last_error
 
 
-def process_batch(input_file, prompt_file, json_property, model, output_file):
+def process_batch(
+    input_file,
+    prompt_file,
+    json_property,
+    model,
+    output_file,
+    start_line=1,
+):
 
     with open(prompt_file, "r", encoding="utf-8") as f:
-
         prompt = f.read()
 
     processed = 0
 
-    with open(output_file, "w", encoding="utf-8") as f_out:
+    # usar "a" para continuar un procesamiento
+    # usar "w" para comenzar desde cero
+    with open(output_file, "a", encoding="utf-8") as f_out:
 
-        for item in read_jsonl(input_file):
+        print(f"Starting from line: {start_line}")
+
+        for item in read_jsonl(input_file, start_line=start_line):
 
             processed += 1
 
@@ -134,9 +141,10 @@ def process_batch(input_file, prompt_file, json_property, model, output_file):
 
             f_out.write(json.dumps(result, ensure_ascii=False) + "\n")
 
-            # libera referencia local
             if processed % 50 == 0:
 
-                print(f"Processed {processed} news...")
+                print(
+                    f"Processed {processed} news " f"(starting at line {start_line})..."
+                )
 
     print(f"Finished. Total processed: {processed}")

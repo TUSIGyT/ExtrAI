@@ -17,6 +17,13 @@ def main():
 
     parser.add_argument("--output", required=True)
 
+    parser.add_argument(
+        "--start-line",
+        type=int,
+        default=1,
+        help="Line number where processing should start",
+    )
+
     args = parser.parse_args()
 
     process_batch(
@@ -25,6 +32,7 @@ def main():
         json_property=args.property,
         model=args.model,
         output_file=args.output,
+        start_line=args.start_line,
     )
 
 

@@ -204,6 +204,18 @@ for model in gemma3:4b Granite4.1:8b qwen3:8b llama3:8b; do
 done
 ```
 
+Es posible, también,  procesar el archivos JSONL a partir de una línea:
+
+```commandline
+poetry run extrai-batch \
+    --input news/sample/sample_w_content.jsonl \
+    --start-line 2 \
+    --prompt src/extrai/prompts/prompt_v3.txt \
+    --property content \
+    --model gemma3:4b \
+    --output results/gemma3_4b_result.jsonl
+```
+
 ---
 
 # 3. Post-procesamiento
