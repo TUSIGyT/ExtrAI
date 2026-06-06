@@ -134,7 +134,7 @@ def process_batch(
                     {
                         "error": str(e),
                         "raw_response": (
-                            raw_response if "raw_response" in locals() else None
+                            parse_llm_json(raw_response) if "raw_response" in locals() else None
                         ),
                     }
                 )
