@@ -159,7 +159,7 @@ Ejecutar:
 ```bash
 poetry run python src/extrai/data_preparation.py \
     --input news/sample/sample_primera_edicion_siniestros_viales_2024.json \
-    --output news/sample/sample_w_content.json
+    --output news/sample/sample_w_content.jsonl
 ```
 
 ---
@@ -178,11 +178,11 @@ Ejemplo:
 
 ```bash
 poetry run extrai-batch \
-    --input news/sample/sample_w_content.json \
+    --input news/sample/sample_w_content.jsonl \
     --prompt src/extrai/prompts/prompt_final.txt \
     --property content \
     --model qwen3:8b \
-    --output results/qwen3_8b_result.json
+    --output results/qwen3_8b_result.jsonl
 ```
 
 ---
@@ -195,11 +195,11 @@ Ejemplo para comparar diferentes LLM:
 for model in gemma3:4b Granite4.1:8b qwen3:8b llama3:8b; do
 
     poetry run extrai-batch \
-        --input news/sample/sample_w_content.json \
+        --input news/sample/sample_w_content.jsonl \
         --prompt src/extrai/prompts/prompt_final.txt \
         --property content \
         --model $model \
-        --output results/${model}_result.json
+        --output results/${model}_result.jsonl
 
 done
 ```
@@ -225,7 +225,9 @@ Algunos modelos pueden devolver información adicional junto al JSON esperado.
 Por ese motivo se incluye una etapa de limpieza:
 
 ```
-src/extrai/post-processing/data_cleaning.py
+poetry run python src/extrai/post-processing/clean_results.py \
+    --input results/gemma3_4b_result.jsonl \
+    --output results/gemma3_4b_final.jsonl
 ```
 
 Esta etapa permite normalizar las respuestas generadas por los modelos antes de su análisis posterior.

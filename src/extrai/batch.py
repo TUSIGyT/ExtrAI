@@ -1,32 +1,9 @@
 import json
-import re
 import time
 
 import ollama
 
-
-def parse_llm_json(content):
-    """
-    Extrae JSON de respuestas LLM.
-    Acepta bloques markdown: json, python, etc.
-    """
-
-    content = content.strip()
-
-    match = re.search(r"```[a-zA-Z0-9_-]*\s*(.*?)```", content, re.DOTALL)
-
-    if match:
-        content = match.group(1).strip()
-
-    match = re.search(r"\{.*\}", content, re.DOTALL)
-
-    if match:
-        content = match.group(0)
-
-    if not content:
-        raise ValueError("LLM returned empty response")
-
-    return json.loads(content)
+from extrai.utils import parse_llm_json
 
 
 def read_jsonl(input_file, start_line=1):
