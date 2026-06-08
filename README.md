@@ -179,7 +179,7 @@ Ejemplo:
 ```bash
 poetry run extrai-batch \
     --input news/sample/sample_w_content.json \
-    --prompt src/extrai/prompts/prompt_v3.txt \
+    --prompt src/extrai/prompts/prompt_final.txt \
     --property content \
     --model qwen3:8b \
     --output results/qwen3_8b_result.json
@@ -210,7 +210,7 @@ Es posible, también,  procesar el archivos JSONL a partir de una línea:
 poetry run extrai-batch \
     --input news/sample/sample_w_content.jsonl \
     --start-line 2 \
-    --prompt src/extrai/prompts/prompt_v3.txt \
+    --prompt src/extrai/prompts/prompt_final.txt \
     --property content \
     --model gemma3:4b \
     --output results/gemma3_4b_result.jsonl
