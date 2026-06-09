@@ -252,3 +252,30 @@ results/
 ```
 
 Cada archivo contiene las noticias procesadas junto con la información extraída por el modelo LLM.
+
+
+# Validation
+If I were implementing your project, the next order would be:
+✅ Structural validation
+✅ Schema completeness
+✅ Semantic validation
+✅ Ground truth
+Field-level error analysis ← I would do this next
+Model comparison report
+Prompt/version tracking
+
+```python
+poetry run python src/extrai/validation/report.py \
+    --input results/gemma3_4b_final.jsonl \
+    --cleaning-report results/gemma3_4b_final.txt \
+    --output results/gemma3_4b_validation.txt
+```
+
+## with ground trhuth
+```python
+poetry run python src/extrai/validation/report.py \
+    --input results/gemma3_4b_final.jsonl \
+    --cleaning-report results/gemma3_4b_final.txt \
+    --ground-truth validation/ground_truth.jsonl \
+    --output results/gemma3_4b_validation.txt
+```
