@@ -46,7 +46,7 @@ def call_ollama(model, prompt, text, retries=3):
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": text},
                 ],
-                options={"temperature": 0, "num_ctx": 4096},
+                options={"temperature": 0, "num_ctx": 4096, "thinking": False},
                 keep_alive="5m",
             )
 
